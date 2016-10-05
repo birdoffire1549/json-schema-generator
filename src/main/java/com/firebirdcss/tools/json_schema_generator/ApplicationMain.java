@@ -127,8 +127,9 @@ public class ApplicationMain {
 		try (BufferedReader reader = new BufferedReader(new FileReader(classFile));) {
 			String line = null;
 			while((line = reader.readLine()) != null) {
-				if (line.contains("com") && line.contains(friendlyFileName)) {
-					result = line.substring(line.indexOf("com"), line.indexOf(friendlyFileName));
+				int startIndex = line.indexOf("[L");
+				if (startIndex != -1 && line.indexOf(friendlyFileName, startIndex) != -1) {
+					result = line.substring((line.indexOf("[L") + "[L".length()), line.indexOf(friendlyFileName));
 					result = result.replaceAll("/", ".");
 					result += friendlyFileName;
 					break;
@@ -144,15 +145,15 @@ public class ApplicationMain {
 	 * 
 	 * @param clazz - The class as {@link Class}
 	 * @return Returns the generated JSON Schema as {@link String}
-	 * @throws IOException
+	 * @throws Exception
 	 */
-	private static String generateJsonSchema(Class<?> clazz) throws IOException {
+	private static String generateJsonSchema(Class<?> clazz) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
 		
 		JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(mapper);
 		JsonSchema schema = schemaGen.generateSchema(clazz);
-
+		
 		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema);
 	}
 
