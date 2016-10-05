@@ -1,4 +1,4 @@
-package com.firebirdcss.tools.json_mapper;
+package com.firebirdcss.tools.json_schema_generator;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -59,9 +59,10 @@ public class ApplicationMain {
 	}
 
 	/**
+	 * Translates file path arguments to {@link URL}s.
 	 * 
-	 * @param args
-	 * @return
+	 * @param args - The file-path arguments as {@link String} array
+	 * @return Returns an array of {@link URL}s
 	 */
 	private static URL[] argsToUrls(String[] args) {
 		URL[] fileUrls = new URL[args.length];
@@ -78,16 +79,17 @@ public class ApplicationMain {
 	}
 
 	/**
+	 * Extracts the class name from a class file.
 	 * 
-	 * @param file
-	 * @return
+	 * @param classFile - The class file as {@link File}
+	 * @return Returns the class name as a {@link String}
 	 * @throws IOException
 	 */
-	private static String getClassNameFromFile(File file) throws IOException {
-		String friendlyFileName = file.getName().contains(".") ? file.getName().substring(0, file.getName().indexOf('.')) : file.getName();
+	private static String getClassNameFromFile(File classFile) throws IOException {
+		String friendlyFileName = classFile.getName().contains(".") ? classFile.getName().substring(0, classFile.getName().indexOf('.')) : classFile.getName();
 		String result = null;
 
-		try (BufferedReader reader = new BufferedReader(new FileReader(file));) {
+		try (BufferedReader reader = new BufferedReader(new FileReader(classFile));) {
 			String line = null;
 			while((line = reader.readLine()) != null) {
 				if (line.contains("com") && line.contains(friendlyFileName)) {
@@ -103,9 +105,10 @@ public class ApplicationMain {
 	}
 
 	/**
+	 * Generates the JSON Schema for a given {@link Class}.
 	 * 
-	 * @param clazz
-	 * @return
+	 * @param clazz - The class as {@link Class}
+	 * @return Returns the generated JSON Schema as {@link String}
 	 * @throws IOException
 	 */
 	private static String generateJsonSchema(Class<?> clazz) throws IOException {
@@ -121,6 +124,8 @@ public class ApplicationMain {
 	/* =============================[Private classes below]============================= */
 
 	/**
+	 * This class makes up a Custom {@link ClassLoader} capable of reading in the binary 
+	 * data of a class file and loading it as a {@link Class}.
 	 * 
 	 * @author Scott Griffis
 	 *
@@ -136,11 +141,11 @@ public class ApplicationMain {
 		}
 
 		/**
-		 * 
-		 * @param classFileUrl
-		 * @return
-		 * @throws IOException 
-		 * @throws ClassFormatError 
+		 * Loads a {@link Class} from the binary class file.
+		 *  
+		 * @param classFileUrl - The URL of the class-file as {@link URL}
+		 * @return Returns the loaded {@link Class}
+		 * @throws IOException  
 		 */
 		public Class<?> loadClass(URL classFileUrl) throws IOException {
 			try {

@@ -1,0 +1,64 @@
+/* ************************* *
+ * Gradle Plugin Definitions *
+ * ************************* */
+apply plugin: 'eclipse'
+apply plugin: 'java'
+
+/* ****************************** *
+ * Custom Variables defined below *
+ * ****************************** */
+Properties props = new Properties()
+props.load(new FileInputStream("${projectDir}/src/main/resources/version.properties"))
+def appVersion = props.get('appVersion') // App Version should only be modified in the version.properties file mentioned above.
+
+def getDate() {
+	return (new Date()).format("MM-dd-yyyy HH:mm:ss")
+}
+
+def manifestAttributes = [
+	"Implementation-Title": "JSON Schema Generator",
+	"Implementation-Version": version,
+	"Implementation-Vendor": "Firebird CSS",
+	"Build-Date": getDate()
+]
+
+/* ****************************** *
+ * Application Definition Section *
+ * ****************************** */
+sourceCompatibility = 1.8
+group = "com.firebirdcss"
+version = appVersion
+
+sourceSets {
+	main {
+		java.srcDir "src/main/java"
+		resources.srcDir "src/main/resources"
+	}
+	
+	test {
+		java.srcDir "src/test/java"
+		resources.srcDir "src/test/resources"
+	}
+}
+
+/* ************************************ *
+ * Repository information goes below... *
+ * ************************************ */
+repositories {
+	mavenCentral()
+}
+
+/* ************************************ *
+ * Dependency information goes below... *
+ * ************************************ */
+dependencies {
+	compile 'com.fasterxml.jackson.core:jackson-annotations:2.8.3'
+	compile 'com.fasterxml.jackson.core:jackson-core:2.8.3'
+	compile 'com.fasterxml.jackson.core:jackson-databind:2.8.3'
+	compile 'com.fasterxml.jackson.module:jackson-module-jsonSchema:2.8.3'
+	
+	compile fileTree(dir:'lib', include:'*.jar') // <---- Used as a staging area for JARs we cannot get online.
+	
+	/* Dependant JUNIT Tessting Framework Components */
+	testCompile 'junit:junit:4.12' // <------------------ Used by JUnit tests.
+}
