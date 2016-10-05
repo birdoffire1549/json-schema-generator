@@ -46,14 +46,14 @@ public class ApplicationMain {
 		} else {
 			URL[] fileUrls = argsToUrls(args);
 	
-			CustomClassLoader loader = new CustomClassLoader(new URLClassLoader(fileUrls));
+			CustomClassLoader loader = new CustomClassLoader(new URLClassLoader(fileUrlsToDirUrls(fileUrls)));
 			StringBuilder msg = new StringBuilder();
 			msg.append("\n\n");
 			
 			for (URL url : fileUrls) {
 				try {
 					Class<?> theClass = loader.loadClass(url);
-					msg.append("Output for class: '").append(theClass.getName()).append("':\n");
+					msg.append("Output for class: '").append(theClass.getName()).append("':\n\n");
 					msg.append(generateJsonSchema(theClass)).append('\n');
 				} catch (Exception e) {
 					msg.append(e.getMessage()).append('\n');
@@ -74,6 +74,33 @@ public class ApplicationMain {
 			
 			System.out.println(msg.toString());
 		}
+	}
+	
+	/**
+	 * Gets an array of fileUrls and builds a new array which contains the URLs for the 
+	 * directories which contain the specified files.
+	 *  
+	 * @param fileUrls - The file URLs as an array of {@link URL}s
+	 * @return Returns the expanded list of URLs as an array of {@link URL}s
+	 */
+	private static URL[] fileUrlsToDirUrls(URL[] fileUrls) {
+		List<URL> results = new ArrayList<>();
+		for (URL url : fileUrls) {
+			if (url.getPath() != null && !url.getPath().isEmpty()) {
+				int lastHopDelimiterIndex = url.getPath().lastIndexOf('/');
+				if (lastHopDelimiterIndex != -1) {
+					File path = new File(url.getPath().substring(0, lastHopDelimiterIndex + 1));
+					try {
+						results.add(path.toURI().toURL());
+					} catch (MalformedURLException dontCare) {}
+				}
+				
+			}
+		}
+		
+		URL[] urls = results.toArray(new URL[0]);
+		
+		return urls;
 	}
 	
 	/**
@@ -152,7 +179,13 @@ public class ApplicationMain {
 		mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
 		
 		JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(mapper);
-		JsonSchema schema = schemaGen.generateSchema(clazz);
+		
+		JsonSchema schema = null;
+		try {
+			schema = schemaGen.generateSchema(clazz);
+		} catch (NoClassDefFoundError e) {
+			throw new Exception(e);
+		}
 		
 		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema);
 	}
