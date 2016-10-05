@@ -62,3 +62,23 @@ dependencies {
 	/* Dependant JUNIT Tessting Framework Components */
 	testCompile 'junit:junit:4.12' // <------------------ Used by JUnit tests.
 }
+
+/* ************************************ *
+ * JAR build information goes below...  *
+ * ************************************ */
+jar {
+    manifest {
+    	attributes "Implementation-Title": "JSON Schema Generator",
+    		"Implementation-Version": version,
+    		"Implementation-Vendor": "Firebird CSS",
+    		"Build-Date": getDate(),
+    		"Main-Class": "com.firebirdcss.tools.json_schema_generator.ApplicationMain"
+    }
+    archiveName 'json-schema-generator.jar'
+    
+    from { 
+    	configurations.compile.collect { 
+    		it.isDirectory() ? it : zipTree(it) 
+    	} 
+    }
+}

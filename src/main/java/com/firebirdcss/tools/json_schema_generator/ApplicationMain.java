@@ -1,5 +1,8 @@
 package com.firebirdcss.tools.json_schema_generator;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -12,6 +15,8 @@ import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.activation.DataHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -36,28 +41,58 @@ public class ApplicationMain {
 	 * @param args - The application's arguments, in this case a list of classes for which to generate JSON Documents.
 	 */
 	public static void main(String[] args) {
-		URL[] fileUrls = argsToUrls(args);
-
-		CustomClassLoader loader = new CustomClassLoader(new URLClassLoader(fileUrls));
-
-		for (URL url : fileUrls) {
-			try {
-				Class<?> theClass = loader.loadClass(url);
-				System.out.println(generateJsonSchema(theClass));
-			} catch (Exception e) {
-				System.out.println(e.getMessage());
+		if (args.length == 0) {
+			displayUsage();
+		} else {
+			URL[] fileUrls = argsToUrls(args);
+	
+			CustomClassLoader loader = new CustomClassLoader(new URLClassLoader(fileUrls));
+			StringBuilder msg = new StringBuilder();
+			msg.append("\n\n");
+			
+			for (URL url : fileUrls) {
+				try {
+					Class<?> theClass = loader.loadClass(url);
+					msg.append("Output for class: '").append(theClass.getName()).append("':\n");
+					msg.append(generateJsonSchema(theClass)).append('\n');
+				} catch (Exception e) {
+					msg.append(e.getMessage()).append('\n');
+				}
+				msg.append("\n\n");
 			}
-			System.out.println("\n\n");
-		}
-		
-		if (malformedUrlMessages.size() > 0) {
-			System.out.println("The following arguments were not able to be translated to URLs:");
-			for (String message : malformedUrlMessages) {
-				System.out.println("\t" + message);
+			
+			if (malformedUrlMessages.size() > 0) {
+				
+				msg.append("The following arguments were not able to be translated to URLs:\n");
+				for (String message : malformedUrlMessages) {
+					msg.append("\t" + message).append('\n');
+				}
 			}
+			
+			putTextOnClipboard(msg.toString());
+			msg.append("\nNote: This output is also available on the clipboard.");
+			
+			System.out.println(msg.toString());
 		}
 	}
-
+	
+	/**
+	 * Displays the program's usage syntax.
+	 */
+	private static void displayUsage() {
+		System.out.println("usage: json-schema-generator <file.class>...\n");
+	}
+	
+	/**
+	 * Puts the passed text onto the system clipboard.
+	 * 
+	 * @param text - The text to place on the clipboard as {@link String}
+	 */
+	private static void putTextOnClipboard(String text) {
+		Transferable trans = new DataHandler(text, DataFlavor.getTextPlainUnicodeFlavor().getMimeType());
+		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(trans, null);
+	}
+	
 	/**
 	 * Translates file path arguments to {@link URL}s.
 	 * 
